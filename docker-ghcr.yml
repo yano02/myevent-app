@@ -1,40 +1,45 @@
-name: Build and Push Docker Images
+name: CI/CD - Deploy to server
 
 on:
   push:
-    branches: [main] # ou "develop" selon l’environnement
+    branches:
+      - main
 
 jobs:
-  build-and-push:
+  deploy:
+    name: Build & Deploy
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to GHCR
-        uses: docker/login-action@v3
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push backend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend
-          push: true
-          tags: ghcr.io/${{ github.repository_owner }}/eventapp-backend:latest
+        run: |
+          docker build -t ghcr.io/yano02/eventapp-backend ./backend
+          docker push ghcr.io/yano02/eventapp-backend
 
       - name: Build and push frontend image
-        uses: docker/build-push-action@v5
+        run: |
+          docker build -t ghcr.io/yano02/eventapp-frontend ./frontend
+          docker push ghcr.io/yano02/eventapp-frontend
+
+      - name: Deploy to remote server via SSH
+        uses: appleboy/ssh-action@v1.0.0
         with:
-          context: ./frontend
-          push: true
-          tags: ghcr.io/${{ github.repository_owner }}/eventapp-frontend:latest
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.REMOTE_SSH_KEY }}
+          script: |
+            cd ~/myevent-app
+            docker pull ghcr.io/yano02/eventapp-backend
+            docker pull ghcr.io/yano02/eventapp-frontend
+            docker compose down
+            docker compose up -d
