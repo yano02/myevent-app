@@ -1,5 +1,4 @@
-
-        # .github/workflows/build-and-deploy.yml
+# .github/workflows/build-and-deploy.yml
 
 name: build-and-deploy
 
@@ -20,15 +19,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Log in to GHCR
+      - name: Log in to GHCR (locally for validation)
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u yano02 --password-stdin
 
-      - name: Pull images
-        run: |
-          docker pull $GHCR_IMAGE_BACKEND
-          docker pull $GHCR_IMAGE_FRONTEND
-
-      - name: Deploy to server
+      - name: Deploy to remote server
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -36,7 +30,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            echo "***" | docker login ghcr.io -u yano02 --password-stdin
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u yano02 --password-stdin
             docker pull $GHCR_IMAGE_BACKEND
             docker pull $GHCR_IMAGE_FRONTEND
-            docker compose -f /chemin/vers/docker-compose.yml up -d
+            cd /home/yannick/myevent-app  # <-- adapte ce chemin si différent
+            docker compose up -d --remove-orphans
