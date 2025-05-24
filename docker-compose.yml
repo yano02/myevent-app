@@ -1,42 +1,39 @@
-version: "3.9"
+version: '3.8'
 
 services:
-  # Service PostgreSQL
-  postgres:
+  db:
     image: postgres:15
-    container_name: myevent-postgres
+    restart: always
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypass
-      POSTGRES_DB: myeventdb
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: yano
+      POSTGRES_DB: eventDB
     ports:
-      - "5434:5432"  
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-  # Service Backend (API Express)
   backend:
     build: ./backend
-    container_name: myevent-backend
     ports:
-      - "8084:3000" 
-    environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: myeventdb
-      DB_USER: myuser
-      DB_PASSWORD: mypass
+      - "9004:9004"
     depends_on:
-      - postgres
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: yano
+      DB_NAME: eventDB
+      PORT: 9004
 
-  # Service Frontend (React)
   frontend:
     build: ./frontend
-    container_name: myevent-frontend
     ports:
-      - "9004:80" 
+      - "8084:80"
     depends_on:
       - backend
-
-volumes:
-  pgdata:
