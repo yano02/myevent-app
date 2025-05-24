@@ -9,8 +9,8 @@ on:
       - main
 
 env:
-  GHCR_IMAGE_FRONTEND: ghcr.io/yano02/myevent-frontend
-  GHCR_IMAGE_BACKEND: ghcr.io/yano02/myevent-backend
+  GHCR_IMAGE_FRONTEND: ghcr.io/yano02/myapp-frontend
+  GHCR_IMAGE_BACKEND: ghcr.io/yano02/myapp-backend
 
 jobs:
   deploy:
