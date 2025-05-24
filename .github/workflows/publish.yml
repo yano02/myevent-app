@@ -1,12 +1,13 @@
-name: 🚀 Publish Docker Images to GHCR
+name: Publish Docker images to GHCR
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
     paths:
-      - "TP_EVENT_API/**"
-      - "TP_EVENT_WEB_APP/**"
-      - ".github/workflows/publish.yml"
+      - 'TP_EVENT_API/**'
+      - 'TP_EVENT_WEB_APP/**'
+      - '.github/workflows/publish.yml'
 
 jobs:
   build-and-push:
@@ -14,39 +15,33 @@ jobs:
 
     permissions:
       contents: read
-      packages: write  # nécessaire pour publier sur GHCR
-      id-token: write
-
-    env:
-      REGISTRY: ghcr.io
-      IMAGE_FRONTEND: ghcr.io/${{ github.repository_owner }}/eventapp-frontend
-      IMAGE_BACKEND: ghcr.io/${{ github.repository_owner }}/eventapp-backend
+      packages: write
 
     steps:
-      - name: 🧾 Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: 🔐 Login to GHCR
-        uses: docker/login-action@v3
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # === FRONTEND ===
-      - name: 🏗️ Build Frontend image
+      # BUILD & PUSH BACKEND
+      - name: Build backend image
         run: |
-          docker build -t $IMAGE_FRONTEND:latest ./TP_EVENT_WEB_APP
+          docker build -t ghcr.io/yano02/eventapp-backend ./TP_EVENT_API
 
-      - name: 📤 Push Frontend image to GHCR
+      - name: Push backend image
         run: |
-          docker push $IMAGE_FRONTEND:latest
+          docker push ghcr.io/yano02/eventapp-backend
 
-      # === BACKEND ===
-      - name: 🏗️ Build Backend image
+      # BUILD & PUSH FRONTEND
+      - name: Build frontend image
         run: |
-          docker build -t $IMAGE_BACKEND:latest ./TP_EVENT_API
+          docker build -t ghcr.io/yano02/eventapp-frontend ./TP_EVENT_WEB_APP
 
-      - name: 📤 Push Backend image to GHCR
+      - name: Push frontend image
         run: |
-          docker push $IMAGE_BACKEND:latest
+          docker push ghcr.io/yano02/eventapp-frontend
