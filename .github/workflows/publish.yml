@@ -1,6 +1,6 @@
 # .github/workflows/build-and-deploy.yml
 
-name: build-and-deploy
+name: build-and-deploy  
 
 on:
   push:
